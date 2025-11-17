@@ -33,12 +33,17 @@ constructor(
             timerSettings.soundEnabled.collect { enabled ->
                 _uiState.value = _uiState.value.copy(soundEnabled = enabled)
             }
+        }
+        viewModelScope.launch {
             timerSettings.blinkEnabled.collect { enabled ->
                 _uiState.value = _uiState.value.copy(blinkEnabled = enabled)
             }
+        }
+        viewModelScope.launch {
             timerSettings.timerDuration.collect { duration ->
                 _uiState.value = _uiState.value.copy(timerPeriod = duration)
             }
+
         }
     }
 

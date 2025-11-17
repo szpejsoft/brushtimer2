@@ -142,20 +142,33 @@ fun SwitchRow(
 @Composable
 fun PeriodPicker(
     period: String,
-    onPeriodChanged: (Long) -> Unit //period in seconds
+    onPeriodChanged: (Long) -> Unit
 ) {
     val isDropDownExpanded = remember { mutableStateOf(false) }
 
-    Box {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(),
+        contentAlignment = Alignment.BottomEnd
+    ) {
         Row(
-            modifier = Modifier.clickable { isDropDownExpanded.value = true }
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isDropDownExpanded.value = true },
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = stringResource(R.string.settings_screen_brush_period_title))
             Spacer(modifier = Modifier.weight(1.0f))
             Text(text = period)
-            Image(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null)
+            Image(
+                imageVector = Icons.Outlined.ArrowDropDown,
+                contentDescription = null,
+                modifier = Modifier.padding(start = 4.dp)
+            )
         }
+
         DropdownMenu(
+            modifier = Modifier.align(Alignment.TopEnd),
             expanded = isDropDownExpanded.value,
             onDismissRequest = { isDropDownExpanded.value = false }
         ) {

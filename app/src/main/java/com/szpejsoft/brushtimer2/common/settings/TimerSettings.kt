@@ -19,43 +19,38 @@ import javax.inject.Inject
 
 
 class TimerSettings
-@Inject constructor(context: Context) {
+@Inject
+constructor(context: Context) {
 
     val blinkEnabled: Flow<Boolean>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_BLINK_ENABLED] ?: Constants.DEFAULT_BLINK_ENABLED }
-            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed())
+            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed(), replay = 1)
 
     val soundEnabled: Flow<Boolean>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_SOUND_ENABLED] ?: Constants.DEFAULT_SOUND_ENABLED }
-            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed())
+            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed(), replay = 1)
 
     val timerDuration: Flow<Long>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_TIMER_DURATION] ?: Constants.DEFAULT_BRUSH_TIMER_PERIOD }
-            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed())
+            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed(), replay = 1)
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PREFS_NAME, scope = scope)
     private val dataStore = context.dataStore
 
     suspend fun saveBlinkEnabled(enabled: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[KEY_BLINK_ENABLED] = enabled
-        }
+        dataStore.edit { preferences -> preferences[KEY_BLINK_ENABLED] = enabled }
     }
 
     suspend fun saveSoundEnabled(enabled: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[KEY_SOUND_ENABLED] = enabled
-        }
+        dataStore.edit { preferences -> preferences[KEY_SOUND_ENABLED] = enabled }
     }
 
     suspend fun saveTimerDuration(duration: Long) {
-        dataStore.edit { preferences ->
-            preferences[KEY_TIMER_DURATION] = duration
-        }
+        dataStore.edit { preferences -> preferences[KEY_TIMER_DURATION] = duration }
     }
 
     companion object {
