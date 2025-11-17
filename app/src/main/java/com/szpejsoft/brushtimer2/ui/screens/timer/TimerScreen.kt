@@ -28,9 +28,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.szpejsoft.brushtimer2.ui.common.secToMinSec
 import com.szpejsoft.brushtimer2.ui.shapes.LeftButtonShape
 import com.szpejsoft.brushtimer2.ui.shapes.RightButtonShape
-import java.util.Locale
 
 @Composable
 fun TimerScreen(
@@ -71,7 +71,7 @@ fun TimerScreen(
         ) {
             Spacer(Modifier.weight(1.0f))
             Text(
-                text = format(state.value.timeLeftSec),
+                text = secToMinSec(state.value.timeLeftSec),
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -131,9 +131,3 @@ private fun Buttons(
     }
 }
 
-//assumption - less than an hour
-private fun format(timeLeftSec: Long): String {
-    val seconds = timeLeftSec % 60
-    val minutes = (timeLeftSec / 60)
-    return String.format(Locale.US, "%02d:%02d", minutes, seconds)
-}

@@ -19,7 +19,7 @@ constructor(
     data class UiState(
         val blinkEnabled: Boolean = true,
         val soundEnabled: Boolean = true,
-        val timerPeriodSec: Int = 120,
+        val timerPeriod: Long = 120,
         val isBusy: Boolean = false
     )
 
@@ -36,6 +36,9 @@ constructor(
             timerSettings.blinkEnabled.collect { enabled ->
                 _uiState.value = _uiState.value.copy(blinkEnabled = enabled)
             }
+            timerSettings.timerDuration.collect { duration ->
+                _uiState.value = _uiState.value.copy(timerPeriod = duration)
+            }
         }
     }
 
@@ -47,18 +50,19 @@ constructor(
         _uiState.value = _uiState.value.copy(soundEnabled = enabled)
     }
 
-    fun onTimerPeriodChanged() {
+    fun onTimerPeriodChanged(period: Long) {
+        _uiState.value = _uiState.value.copy(timerPeriod = period)
     }
 
     fun onSaveClicked() {
         viewModelScope.launch {
             val blinkEnabled = _uiState.value.blinkEnabled
             val soundEnabled = _uiState.value.soundEnabled
-            val timerPeriodSec = _uiState.value.timerPeriodSec
+            val timerPeriodSec = _uiState.value.timerPeriod
             _uiState.value = _uiState.value.copy(isBusy = true)
             timerSettings.saveBlinkEnabled(blinkEnabled)
             timerSettings.saveSoundEnabled(soundEnabled)
-
+            timerSettings.saveTimerDuration(timerPeriodSec)
             delay(1000)
             _uiState.value = _uiState.value.copy(isBusy = false)
         }

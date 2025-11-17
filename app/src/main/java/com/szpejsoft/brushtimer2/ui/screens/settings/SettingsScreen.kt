@@ -1,6 +1,8 @@
 package com.szpejsoft.brushtimer2.ui.screens.settings
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -25,12 +30,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.szpejsoft.brushtimer2.R
+import com.szpejsoft.brushtimer2.common.Constants.BRUSH_TIMER_PERIODS
+import com.szpejsoft.brushtimer2.ui.common.secToMinSec
 import com.szpejsoft.brushtimer2.ui.shapes.ButtonShape
 
 @Composable
@@ -38,6 +47,7 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -59,6 +69,12 @@ fun SettingsScreen(
                 enabled = uiState.soundEnabled,
                 onCheckedChange = { settingsViewModel.onToggleSoundEnabled(it) }
             )
+
+            PeriodPicker(
+                period = secToMinSec(uiState.timerPeriod)
+            ) { period ->
+                settingsViewModel.onTimerPeriodChanged(period)
+            }
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 modifier = Modifier
@@ -122,3 +138,36 @@ fun SwitchRow(
     }
 }
 
+
+@Composable
+fun PeriodPicker(
+    period: String,
+    onPeriodChanged: (Long) -> Unit //period in seconds
+) {
+    val isDropDownExpanded = remember { mutableStateOf(false) }
+
+    Box {
+        Row(
+            modifier = Modifier.clickable { isDropDownExpanded.value = true }
+        ) {
+            Text(text = stringResource(R.string.settings_screen_brush_period_title))
+            Spacer(modifier = Modifier.weight(1.0f))
+            Text(text = period)
+            Image(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null)
+        }
+        DropdownMenu(
+            expanded = isDropDownExpanded.value,
+            onDismissRequest = { isDropDownExpanded.value = false }
+        ) {
+            BRUSH_TIMER_PERIODS.forEach { period ->
+                DropdownMenuItem(
+                    text = { Text(secToMinSec(period)) },
+                    onClick = {
+                        isDropDownExpanded.value = false
+                        onPeriodChanged(period)
+                    }
+                )
+            }
+        }
+    }
+}

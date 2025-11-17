@@ -5,8 +5,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.szpejsoft.brushtimer2.common.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,11 +22,18 @@ class TimerSettings
 @Inject constructor(context: Context) {
 
     val blinkEnabled: Flow<Boolean>
-        get() = dataStore.data.map { preferences -> preferences[KEY_BLINK_ENABLED] ?: false }
+        get() = dataStore.data
+            .map { preferences -> preferences[KEY_BLINK_ENABLED] ?: Constants.DEFAULT_BLINK_ENABLED }
             .shareIn(scope = scope, started = SharingStarted.WhileSubscribed())
 
     val soundEnabled: Flow<Boolean>
-        get() = dataStore.data.map { preferences -> preferences[KEY_SOUND_ENABLED] ?: false }
+        get() = dataStore.data
+            .map { preferences -> preferences[KEY_SOUND_ENABLED] ?: Constants.DEFAULT_SOUND_ENABLED }
+            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed())
+
+    val timerDuration: Flow<Long>
+        get() = dataStore.data
+            .map { preferences -> preferences[KEY_TIMER_DURATION] ?: Constants.DEFAULT_BRUSH_TIMER_PERIOD }
             .shareIn(scope = scope, started = SharingStarted.WhileSubscribed())
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -44,10 +52,15 @@ class TimerSettings
         }
     }
 
+    suspend fun saveTimerDuration(duration: Long) {
+        dataStore.edit { preferences ->
+            preferences[KEY_TIMER_DURATION] = duration
+        }
+    }
 
     companion object {
         private const val PREFS_NAME = "timer_settings"
-        private val KEY_TIMER_DURATION = intPreferencesKey("timer_duration")
+        private val KEY_TIMER_DURATION = longPreferencesKey("timer_duration")
         private val KEY_BLINK_ENABLED = booleanPreferencesKey("blink_enabled")
         private val KEY_SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
     }
