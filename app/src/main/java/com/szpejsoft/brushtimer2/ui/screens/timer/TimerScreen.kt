@@ -61,7 +61,7 @@ fun TimerScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primaryContainer)
             .background(Color.White.copy(alpha = alpha))
-            .padding(horizontal = 12.dp)
+            .padding(12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -81,7 +81,6 @@ fun TimerScreen(
                 state.value is TimerViewModel.UiState.Running,
                 { viewModel.start() },
                 { viewModel.stop() })
-            Spacer(Modifier.height(12.dp))
         }
     }
 }

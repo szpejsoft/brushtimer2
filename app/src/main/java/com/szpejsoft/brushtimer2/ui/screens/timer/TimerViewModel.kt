@@ -30,11 +30,6 @@ class TimerViewModel : ViewModel() {
 
     private var timerJob: Job? = null
 
-    init {
-        Log.d("ptsz", "TVM blink: ${BLINK_MILLIS.joinToString()}")
-    }
-
-
     fun start() {
         val startTime = System.currentTimeMillis()
         var elapsedTimeMillis = 0L
@@ -54,7 +49,7 @@ class TimerViewModel : ViewModel() {
     }
 
     private fun shouldBlink(previousTimeLeft: Long, timeLeft: Long): Boolean {
-        val result =  BLINK_MILLIS.any { blinkTime -> previousTimeLeft <= blinkTime && blinkTime < timeLeft }
+        val result = BLINK_MILLIS.any { blinkTime -> previousTimeLeft <= blinkTime && blinkTime < timeLeft }
         Log.d("ptsz", "VM shouldBlink prev: $previousTimeLeft, timeLeft: $timeLeft -> $result")
         return result
     }

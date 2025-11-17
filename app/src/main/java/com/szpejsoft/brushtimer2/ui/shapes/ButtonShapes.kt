@@ -3,6 +3,8 @@ package com.szpejsoft.brushtimer2.ui.shapes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
+val ButtonShape = RoundedCornerShape(24.dp)
+
 val LeftButtonShape = RoundedCornerShape(
     topStart = 24.dp,
     bottomStart = 24.dp,
