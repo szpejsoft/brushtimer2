@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">brushtimer2</string>
+    <string name="bottom_tab_timer_title">Timer</string>
+    <string name="bottom_tab_settings_title">Settings</string>
+    <string name="settings_screen_blink_toggle_title">Blink enabled</string>
+    <string name="settings_screen_sound_toggle_title">Sound enabled</string>
+    <string name="settings_screen_save_button">Save</string>
 </resources>
