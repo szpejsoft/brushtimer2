@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.ArrowDropUp
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -146,41 +147,49 @@ fun PeriodPicker(
 ) {
     val isDropDownExpanded = remember { mutableStateOf(false) }
 
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth(),
-        contentAlignment = Alignment.BottomEnd
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { isDropDownExpanded.value = true },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = stringResource(R.string.settings_screen_brush_period_title))
-            Spacer(modifier = Modifier.weight(1.0f))
-            Text(text = period)
-            Image(
-                imageVector = Icons.Outlined.ArrowDropDown,
-                contentDescription = null,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-        }
-
-        DropdownMenu(
-            modifier = Modifier.align(Alignment.TopEnd),
-            expanded = isDropDownExpanded.value,
-            onDismissRequest = { isDropDownExpanded.value = false }
-        ) {
-            BRUSH_TIMER_PERIODS.forEach { period ->
-                DropdownMenuItem(
-                    text = { Text(secToMinSec(period)) },
-                    onClick = {
-                        isDropDownExpanded.value = false
-                        onPeriodChanged(period)
-                    }
+        Text(text = stringResource(R.string.settings_screen_brush_period_title))
+        Spacer(modifier = Modifier.weight(1.0f))
+        Box(contentAlignment = Alignment.TopEnd) {
+            Row(
+                modifier = Modifier.clickable { isDropDownExpanded.value = true },
+            ) {
+                Text(text = period)
+                Image(
+                    imageVector = if (isDropDownExpanded.value) Icons.Outlined.ArrowDropUp else
+                        Icons.Outlined.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
+            PeriodsDropDown(isDropDownExpanded.value, onPeriodChanged) { isDropDownExpanded.value = false }
+        }
+    }
+}
+
+
+@Composable
+private fun PeriodsDropDown(
+    expanded: Boolean,
+    onPeriodChanged: (Long) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest
+    ) {
+        BRUSH_TIMER_PERIODS.forEach { period ->
+            DropdownMenuItem(
+                text = { Text(secToMinSec(period)) },
+                onClick = {
+                    onDismissRequest()
+                    onPeriodChanged(period)
+                }
+            )
         }
     }
 }

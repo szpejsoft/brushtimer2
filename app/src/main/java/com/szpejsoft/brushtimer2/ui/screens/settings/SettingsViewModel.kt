@@ -2,6 +2,7 @@ package com.szpejsoft.brushtimer2.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.szpejsoft.brushtimer2.common.combine
 import com.szpejsoft.brushtimer2.common.settings.TimerSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -30,20 +31,16 @@ constructor(
 
     init {
         viewModelScope.launch {
-            timerSettings.soundEnabled.collect { enabled ->
-                _uiState.value = _uiState.value.copy(soundEnabled = enabled)
+            with(timerSettings) {
+                combine(soundEnabled, blinkEnabled, timerDuration)
+                    .collect { (soundEnabled, blinkEnabled, timerDuration) ->
+                        _uiState.value = _uiState.value.copy(
+                            blinkEnabled = blinkEnabled,
+                            soundEnabled = soundEnabled,
+                            timerPeriod = timerDuration
+                        )
+                    }
             }
-        }
-        viewModelScope.launch {
-            timerSettings.blinkEnabled.collect { enabled ->
-                _uiState.value = _uiState.value.copy(blinkEnabled = enabled)
-            }
-        }
-        viewModelScope.launch {
-            timerSettings.timerDuration.collect { duration ->
-                _uiState.value = _uiState.value.copy(timerPeriod = duration)
-            }
-
         }
     }
 
