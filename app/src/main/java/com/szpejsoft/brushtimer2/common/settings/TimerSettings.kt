@@ -14,28 +14,37 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.shareIn
-import javax.inject.Inject
+import kotlinx.coroutines.flow.stateIn
 
 
-class TimerSettings
-@Inject
-constructor(context: Context) {
+class TimerSettings(context: Context) {
 
     val blinkEnabled: Flow<Boolean>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_BLINK_ENABLED] ?: Constants.DEFAULT_BLINK_ENABLED }
-            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed(), replay = 1)
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = Constants.DEFAULT_BLINK_ENABLED
+            )
 
     val soundEnabled: Flow<Boolean>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_SOUND_ENABLED] ?: Constants.DEFAULT_SOUND_ENABLED }
-            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed(), replay = 1)
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = Constants.DEFAULT_SOUND_ENABLED
+            )
 
     val timerDuration: Flow<Long>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_TIMER_DURATION] ?: Constants.DEFAULT_BRUSH_TIMER_PERIOD }
-            .shareIn(scope = scope, started = SharingStarted.WhileSubscribed(), replay = 1)
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = Constants.DEFAULT_BRUSH_TIMER_PERIOD
+            )
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PREFS_NAME, scope = scope)

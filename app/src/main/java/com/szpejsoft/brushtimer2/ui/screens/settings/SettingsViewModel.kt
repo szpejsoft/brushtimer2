@@ -21,7 +21,7 @@ constructor(
         val blinkEnabled: Boolean = true,
         val soundEnabled: Boolean = true,
         val timerPeriod: Long = 120,
-        val isBusy: Boolean = false
+        val isBusy: Boolean = false,
     )
 
     val uiState: StateFlow<UiState>

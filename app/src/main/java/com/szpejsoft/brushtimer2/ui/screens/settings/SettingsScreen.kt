@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -81,6 +83,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
+                enabled = !uiState.isBusy,
                 shape = ButtonShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -118,12 +121,18 @@ fun SwitchRow(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+        )
         Switch(
+            modifier = Modifier.height(24.dp),
             checked = enabled,
             onCheckedChange = { onCheckedChange(it) },
             thumbContent = {
@@ -146,23 +155,36 @@ fun PeriodPicker(
     onPeriodChanged: (Long) -> Unit
 ) {
     val isDropDownExpanded = remember { mutableStateOf(false) }
-
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(64.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = stringResource(R.string.settings_screen_brush_period_title))
+        Text(
+            text = stringResource(R.string.settings_screen_brush_period_title),
+            style = MaterialTheme.typography.titleLarge,
+        )
         Spacer(modifier = Modifier.weight(1.0f))
-        Box(contentAlignment = Alignment.TopEnd) {
+        Box(
+            modifier = Modifier.fillMaxHeight(),
+            contentAlignment = Alignment.TopEnd
+        ) {
             Row(
-                modifier = Modifier.clickable { isDropDownExpanded.value = true },
+                modifier = Modifier
+                    .clickable { isDropDownExpanded.value = true }
+                    .fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = period)
+                Text(
+                    text = period,
+                    style = MaterialTheme.typography.titleLarge,
+                )
                 Image(
                     imageVector = if (isDropDownExpanded.value) Icons.Outlined.ArrowDropUp else
                         Icons.Outlined.ArrowDropDown,
                     contentDescription = null,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }

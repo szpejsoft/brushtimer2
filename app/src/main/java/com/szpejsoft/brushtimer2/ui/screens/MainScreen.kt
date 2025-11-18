@@ -41,7 +41,6 @@ fun MainScreenContent(
     padding: PaddingValues,
     screenNavigator: ScreenNavigator
 ) {
-
     Surface(
         modifier = Modifier
             .fillMaxSize()
