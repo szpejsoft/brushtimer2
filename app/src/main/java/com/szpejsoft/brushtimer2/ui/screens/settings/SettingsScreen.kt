@@ -1,5 +1,8 @@
 package com.szpejsoft.brushtimer2.ui.screens.settings
 
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.ArrowDropUp
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -36,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -75,9 +78,7 @@ fun SettingsScreen(
 
             PeriodPicker(
                 period = secToMinSec(uiState.timerPeriod)
-            ) { period ->
-                settingsViewModel.onTimerPeriodChanged(period)
-            }
+            ) { period -> settingsViewModel.onTimerPeriodChanged(period) }
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 modifier = Modifier
@@ -113,7 +114,6 @@ fun SettingsScreen(
     }
 }
 
-
 @Composable
 fun SwitchRow(
     title: String,
@@ -148,13 +148,19 @@ fun SwitchRow(
     }
 }
 
-
 @Composable
 fun PeriodPicker(
     period: String,
     onPeriodChanged: (Long) -> Unit
 ) {
     val isDropDownExpanded = remember { mutableStateOf(false) }
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isDropDownExpanded.value) 180.0f else 0.0f,
+        visibilityThreshold = 0.0f,
+        animationSpec = TweenSpec(easing = LinearOutSlowInEasing),
+        label = "arrowRotation"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,18 +187,18 @@ fun PeriodPicker(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Image(
-                    imageVector = if (isDropDownExpanded.value) Icons.Outlined.ArrowDropUp else
-                        Icons.Outlined.ArrowDropDown,
+                    imageVector = Icons.Outlined.ArrowDropDown,
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .rotate(rotationAngle)
                 )
             }
             PeriodsDropDown(isDropDownExpanded.value, onPeriodChanged) { isDropDownExpanded.value = false }
         }
     }
 }
-
 
 @Composable
 private fun PeriodsDropDown(
@@ -201,12 +207,20 @@ private fun PeriodsDropDown(
     onDismissRequest: () -> Unit
 ) {
     DropdownMenu(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.secondaryContainer),
         expanded = expanded,
         onDismissRequest = onDismissRequest
     ) {
         BRUSH_TIMER_PERIODS.forEach { period ->
             DropdownMenuItem(
-                text = { Text(secToMinSec(period)) },
+                text = {
+                    Text(
+                        text = secToMinSec(period),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                },
                 onClick = {
                     onDismissRequest()
                     onPeriodChanged(period)
