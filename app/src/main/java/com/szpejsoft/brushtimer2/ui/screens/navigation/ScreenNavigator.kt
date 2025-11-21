@@ -5,29 +5,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 class ScreenNavigator {
 
-    val currentBottomTab = MutableStateFlow<BottomTab>(BottomTab.Timer)
+    val currentBottomTab = MutableStateFlow<Screen>(Screen.Timer)
     val backStack = mutableStateListOf<Screen>(Screen.Timer)
 
     fun navigateBack() {
         if (backStack.last() == Screen.Settings) {
-            navigateBottomTab(BottomTab.Timer)
+            navigateBottomTab(Screen.Timer)
         } else {
             backStack.removeLastOrNull()
         }
     }
 
-    fun navigateBottomTab(tab: BottomTab) {
-        currentBottomTab.value = tab
+    fun navigateBottomTab(screen: Screen) {
+        currentBottomTab.value = screen
         backStack.clear()
-        val screen = when (tab) {
-            BottomTab.Timer -> Screen.Timer
-            BottomTab.Settings -> Screen.Settings
-        }
         backStack.add(screen)
     }
 
     companion object {
-        val BOTTOM_TABS = listOf(BottomTab.Timer, BottomTab.Settings)
+        val BOTTOM_TABS = listOf(Screen.Timer, Screen.Settings)
     }
 
 }

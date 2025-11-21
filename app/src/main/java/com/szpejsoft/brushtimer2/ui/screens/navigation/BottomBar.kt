@@ -9,9 +9,9 @@ import androidx.compose.ui.res.stringResource
 
 @Composable
 fun BottomBar(
-    bottomTabs: List<BottomTab>,
-    currentTab: BottomTab,
-    onTabSelected: (BottomTab) -> Unit
+    bottomTabs: List<Screen>,
+    currentTab: Screen,
+    onTabSelected: (Screen) -> Unit
 ) {
     NavigationBar {
         bottomTabs.forEach { tab ->

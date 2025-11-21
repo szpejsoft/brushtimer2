@@ -154,6 +154,7 @@ fun PeriodPicker(
     onPeriodChanged: (Long) -> Unit
 ) {
     val isDropDownExpanded = remember { mutableStateOf(false) }
+
     val rotationAngle by animateFloatAsState(
         targetValue = if (isDropDownExpanded.value) 180.0f else 0.0f,
         visibilityThreshold = 0.0f,
