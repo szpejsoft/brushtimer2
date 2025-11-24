@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -75,7 +76,13 @@ fun SettingsScreen(
                 enabled = uiState.soundEnabled,
                 onCheckedChange = { settingsViewModel.onToggleSoundEnabled(it) }
             )
-
+            if (uiState.isAdaptiveColorSchemeSupported) {
+                SwitchRow(
+                    title = stringResource(R.string.settings_screen_adaptive_colors_toggle_title),
+                    enabled = uiState.adaptiveColorSchemeEnabled,
+                    onCheckedChange = { settingsViewModel.onToggleAdaptiveColorScheme(it) }
+                )
+            }
             PeriodPicker(
                 period = secToMinSec(uiState.timerPeriod)
             ) { period -> settingsViewModel.onTimerPeriodChanged(period) }
@@ -123,16 +130,19 @@ fun SwitchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp),
+            .defaultMinSize(minHeight = 64.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
+            modifier = Modifier.weight(1.0f),
             text = title,
             style = MaterialTheme.typography.titleLarge,
         )
         Switch(
-            modifier = Modifier.height(24.dp),
+            modifier = Modifier
+                .height(24.dp)
+                .padding(start = 4.dp),
             checked = enabled,
             onCheckedChange = { onCheckedChange(it) },
             thumbContent = {

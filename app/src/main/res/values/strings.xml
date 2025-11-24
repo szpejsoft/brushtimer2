@@ -4,6 +4,7 @@
     <string name="bottom_tab_settings_title">Settings</string>
     <string name="settings_screen_blink_toggle_title">Blink enabled</string>
     <string name="settings_screen_sound_toggle_title">Sound enabled</string>
+    <string name="settings_screen_adaptive_colors_toggle_title">Adaptive color scheme enabled</string>
     <string name="settings_screen_brush_period_title">Brushing time</string>
     <string name="settings_screen_save_button">Save</string>
 </resources>

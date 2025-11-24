@@ -11,15 +11,24 @@ import com.szpejsoft.brushtimer2.common.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-
 class TimerSettings(context: Context) {
 
-    val blinkEnabled: Flow<Boolean>
+    val adaptiveColorSchemeEnabled: StateFlow<Boolean>
+        get() = dataStore.data
+            .map { preferences ->
+                preferences[KEY_ADAPTIVE_COLOR_SCHEME_ENABLED] ?: Constants.DEFAULT_ADAPTIVE_COLOR_SCHEME_ENABLED
+            }
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = Constants.DEFAULT_BLINK_ENABLED
+            )
+    val blinkEnabled: StateFlow<Boolean>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_BLINK_ENABLED] ?: Constants.DEFAULT_BLINK_ENABLED }
             .stateIn(
@@ -28,7 +37,7 @@ class TimerSettings(context: Context) {
                 initialValue = Constants.DEFAULT_BLINK_ENABLED
             )
 
-    val soundEnabled: Flow<Boolean>
+    val soundEnabled: StateFlow<Boolean>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_SOUND_ENABLED] ?: Constants.DEFAULT_SOUND_ENABLED }
             .stateIn(
@@ -37,7 +46,7 @@ class TimerSettings(context: Context) {
                 initialValue = Constants.DEFAULT_SOUND_ENABLED
             )
 
-    val timerDuration: Flow<Long>
+    val timerDuration: StateFlow<Long>
         get() = dataStore.data
             .map { preferences -> preferences[KEY_TIMER_DURATION] ?: Constants.DEFAULT_BRUSH_TIMER_PERIOD }
             .stateIn(
@@ -49,6 +58,11 @@ class TimerSettings(context: Context) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = PREFS_NAME, scope = scope)
     private val dataStore = context.dataStore
+
+
+    suspend fun saveAdaptiveColorSchemeEnabled(enabled: Boolean) {
+        dataStore.edit { preferences -> preferences[KEY_ADAPTIVE_COLOR_SCHEME_ENABLED] = enabled }
+    }
 
     suspend fun saveBlinkEnabled(enabled: Boolean) {
         dataStore.edit { preferences -> preferences[KEY_BLINK_ENABLED] = enabled }
@@ -67,6 +81,7 @@ class TimerSettings(context: Context) {
         private val KEY_TIMER_DURATION = longPreferencesKey("timer_duration")
         private val KEY_BLINK_ENABLED = booleanPreferencesKey("blink_enabled")
         private val KEY_SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+        private val KEY_ADAPTIVE_COLOR_SCHEME_ENABLED = booleanPreferencesKey("adaptive_color_scheme_enabled")
     }
 
 }

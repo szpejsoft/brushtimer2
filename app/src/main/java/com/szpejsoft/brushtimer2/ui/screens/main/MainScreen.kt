@@ -1,4 +1,4 @@
-package com.szpejsoft.brushtimer2.ui.screens
+package com.szpejsoft.brushtimer2.ui.screens.main
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,32 +8,43 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.ui.NavDisplay
+import com.szpejsoft.brushtimer2.common.Constants
 import com.szpejsoft.brushtimer2.ui.screens.navigation.BottomBar
 import com.szpejsoft.brushtimer2.ui.screens.navigation.ScreenNavigator
 import com.szpejsoft.brushtimer2.ui.screens.navigation.entryProvider
+import com.szpejsoft.brushtimer2.ui.theme.Brushtimer2Theme
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    mainScreenViewModel: MainScreenViewModel = hiltViewModel()
+) {
     val screenNavigator = remember { ScreenNavigator() }
     val currentBottomTab = screenNavigator.currentBottomTab.collectAsState()
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        content = { innerPadding -> MainScreenContent(innerPadding, screenNavigator) },
-        bottomBar = {
-            BottomAppBar(modifier = Modifier) {
-                BottomBar(
-                    bottomTabs = ScreenNavigator.BOTTOM_TABS,
-                    currentTab = currentBottomTab.value,
-                    onTabSelected = { tab -> screenNavigator.navigateBottomTab(tab) }
+    val adaptiveColorSchemeEnabled by mainScreenViewModel.adaptiveColorSchemeEnabled.collectAsState()
 
-                )
+    Brushtimer2Theme(
+        dynamicColor = adaptiveColorSchemeEnabled
+    ) {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize(),
+            content = { innerPadding -> MainScreenContent(innerPadding, screenNavigator) },
+            bottomBar = {
+                BottomAppBar(modifier = Modifier) {
+                    BottomBar(
+                        bottomTabs = ScreenNavigator.BOTTOM_TABS,
+                        currentTab = currentBottomTab.value,
+                        onTabSelected = { tab -> screenNavigator.navigateBottomTab(tab) }
+                    )
+                }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
