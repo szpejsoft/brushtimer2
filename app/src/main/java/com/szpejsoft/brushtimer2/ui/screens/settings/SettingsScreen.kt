@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.rounded.Check
@@ -46,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.szpejsoft.brushtimer2.R
 import com.szpejsoft.brushtimer2.common.Constants.BRUSH_TIMER_PERIODS
+import com.szpejsoft.brushtimer2.ui.common.Direction
+import com.szpejsoft.brushtimer2.ui.common.GesturedScrollBar
 import com.szpejsoft.brushtimer2.ui.common.secToMinSec
 import com.szpejsoft.brushtimer2.ui.shapes.ButtonShape
 
@@ -54,6 +58,7 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -63,7 +68,8 @@ fun SettingsScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.Start,
         ) {
             SwitchRow(
@@ -105,7 +111,13 @@ fun SettingsScreen(
                 )
             }
         }
-
+        GesturedScrollBar(
+            state = scrollState,
+            direction = Direction.VERTICAL,
+            width = 8.dp,
+            minLength = 48.dp,
+            color = MaterialTheme.colorScheme.tertiary
+        )
         if (uiState.isBusy) {
             Box(
                 modifier = Modifier.fillMaxSize(),
