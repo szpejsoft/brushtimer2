@@ -9,11 +9,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.ui.NavDisplay
-import com.szpejsoft.brushtimer2.common.Constants
 import com.szpejsoft.brushtimer2.ui.screens.navigation.BottomBar
 import com.szpejsoft.brushtimer2.ui.screens.navigation.ScreenNavigator
 import com.szpejsoft.brushtimer2.ui.screens.navigation.entryProvider
@@ -23,7 +22,7 @@ import com.szpejsoft.brushtimer2.ui.theme.Brushtimer2Theme
 fun MainScreen(
     mainScreenViewModel: MainScreenViewModel = hiltViewModel()
 ) {
-    val screenNavigator = remember { ScreenNavigator() }
+    val screenNavigator = rememberSaveable(saver = ScreenNavigator.Saver) { ScreenNavigator() }
     val currentBottomTab = screenNavigator.currentBottomTab.collectAsState()
     val adaptiveColorSchemeEnabled by mainScreenViewModel.adaptiveColorSchemeEnabled.collectAsState()
 
@@ -37,8 +36,7 @@ fun MainScreen(
             bottomBar = {
                 BottomAppBar(modifier = Modifier) {
                     BottomBar(
-                        bottomTabs = ScreenNavigator.BOTTOM_TABS,
-                        currentTab = currentBottomTab.value,
+                        currentScreen = currentBottomTab.value,
                         onTabSelected = { tab -> screenNavigator.navigateBottomTab(tab) }
                     )
                 }
