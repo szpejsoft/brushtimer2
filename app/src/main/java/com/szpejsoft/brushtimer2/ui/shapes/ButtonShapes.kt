@@ -18,3 +18,16 @@ val RightButtonShape = RoundedCornerShape(
     topEnd = 24.dp,
     bottomEnd = 24.dp
 )
+
+val TopButtonShape = RoundedCornerShape(
+    topStart = 24.dp,
+    bottomStart = 0.dp,
+    topEnd = 24.dp,
+    bottomEnd = 0.dp
+)
+val BottomButtonShape = RoundedCornerShape(
+    topStart = 0.dp,
+    bottomStart = 24.dp,
+    topEnd = 0.dp,
+    bottomEnd = 24.dp
+)
