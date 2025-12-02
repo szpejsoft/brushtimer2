@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.szpejsoft.brushtimer2"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -59,6 +59,9 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.android.material)
+
 
     //coroutines
     implementation(libs.kotlinx.coroutines.core)

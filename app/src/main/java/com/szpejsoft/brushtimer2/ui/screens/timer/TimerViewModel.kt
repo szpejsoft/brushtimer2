@@ -4,13 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.szpejsoft.brushtimer2.common.Constants
 import com.szpejsoft.brushtimer2.common.settings.TimerSettings
+import com.szpejsoft.brushtimer2.services.TimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -34,10 +34,10 @@ constructor(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle(Constants.DEFAULT_BRUSH_TIMER_PERIOD, false))
 
-    private var timerJob: Job? = null
+    private var timerService: TimerService? = null
     private var soundEnabled = false
     private var blinkEnabled = false
-    private var timerDuration = Constants.DEFAULT_BRUSH_TIMER_PERIOD
+    private var timerDurationSec = Constants.DEFAULT_BRUSH_TIMER_PERIOD
         set(value) {
             field = value
             blinkMillis = LongArray(3) { i -> (i + 1) * value * 1000 / 4 }
@@ -57,45 +57,44 @@ constructor(
             }
             launch {
                 timerSettings.timerDuration
-                    .collect { timerDuration = it }
+                    .collect { timerDurationSec = it }
             }
         }
     }
 
+    fun onServiceBound(service: TimerService) {
+        timerService = service
+        viewModelScope.launch {
+            val timerDurationMillis = timerDurationSec * 1000
+            timerService?.let { service ->
+                service.timeLeftMillis
+                    .scan(initial = timerDurationMillis to timerDurationMillis) { acc, value -> acc.second to value }
+                    .collect { (previousTimeLeftMillis, timeLeftMillis) ->
+                        if (previousTimeLeftMillis < timerDurationMillis && timeLeftMillis == timerDurationMillis) {
+                            //after timer stops
+                            _uiState.value = UiState.Idle(timerDurationSec, soundEnabled)
+                        } else if (previousTimeLeftMillis == timerDurationMillis && timeLeftMillis == 0L) { //first state before timer start
+                            _uiState.value = UiState.Idle(timerDurationSec, false)
+                        } else {
+                            _uiState.value = UiState.Running(
+                                timeLeftMillis / 1000,
+                                shouldBlink(previousTimeLeftMillis, timeLeftMillis) && blinkEnabled
+                            )
+                        }
+                    }
+            }
+        }
+    }
 
     fun start() {
-        val startTime = System.currentTimeMillis()
-        var elapsedTimeMillis = 0L
+        timerService?.startTimer()
+    }
 
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            while (elapsedTimeMillis < timerDuration * 1000) {
-                delay(TIME_STEP_MILLIS)
-                elapsedTimeMillis = System.currentTimeMillis() - startTime
-                val timeLeftMillis = timerDuration * 1000 - elapsedTimeMillis
-                val previousTimeLeft = _uiState.value.timeLeftSec * 1000
-                _uiState.value = UiState.Running(
-                    timeLeftMillis / 1000,
-                    shouldBlink(previousTimeLeft, timeLeftMillis) && blinkEnabled
-                )
-            }
-            delay(TIME_STEP_MILLIS)
-            _uiState.value = UiState.Idle(timerDuration, soundEnabled)
-        }
+    fun stop() {
+        timerService?.stopTimer()
     }
 
     private fun shouldBlink(previousTimeLeft: Long, timeLeft: Long): Boolean =
         blinkMillis.any { blinkTime -> blinkTime in previousTimeLeft..<timeLeft }
-
-    fun stop() {
-        viewModelScope.launch {
-            timerJob?.cancel()
-            _uiState.value = UiState.Idle(timerDuration, false)
-        }
-    }
-
-    companion object {
-        private const val TIME_STEP_MILLIS = 100L
-    }
 
 }
