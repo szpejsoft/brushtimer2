@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    tools:ignore="UseCompoundDrawables">
+
+    <TextView
+        android:id="@+id/timer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center_vertical|start"
+        android:text="@string/time_left"
+        android:textSize="20sp" />
+
+    <ImageView
+        android:id="@+id/stopButton"
+        android:layout_width="48dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/border"
+        android:contentDescription="@string/stop"
+        android:gravity="center"
+        android:padding="6dp"
+        android:src="@drawable/ic_stop" />
+
+</LinearLayout>

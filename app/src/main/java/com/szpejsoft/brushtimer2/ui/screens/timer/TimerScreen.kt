@@ -1,7 +1,12 @@
 package com.szpejsoft.brushtimer2.ui.screens.timer
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.media.MediaPlayer
 import android.media.RingtoneManager
+import android.os.IBinder
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -15,8 +20,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -24,12 +31,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.szpejsoft.brushtimer2.services.TimerService
 import com.szpejsoft.brushtimer2.ui.common.secToMinSec
 import com.szpejsoft.brushtimer2.ui.shapes.BottomButtonShape
 import com.szpejsoft.brushtimer2.ui.shapes.LeftButtonShape
@@ -40,11 +51,35 @@ import com.szpejsoft.brushtimer2.ui.shapes.TopButtonShape
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel()
 ) {
-
+    val context = LocalContext.current
+    var isBound by remember { mutableStateOf(false) }
     val state by viewModel.uiState.collectAsState()
 
     val playSound = (state as? TimerViewModel.UiState.Idle)?.playSound == true
     val blink = (state as? TimerViewModel.UiState.Running)?.blink == true
+
+
+    DisposableEffect(Unit) {
+        val serviceIntent = Intent(context, TimerService::class.java)
+        context.startService(serviceIntent)
+        val connection = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                val binder = service as TimerService.LocalBinder
+                viewModel.onServiceBound(binder.getService())
+                isBound = true
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                isBound = false
+            }
+        }
+
+        context.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+
+        onDispose {
+            context.unbindService(connection)
+        }
+    }
 
     if (playSound) {
         val context = LocalContext.current
@@ -61,18 +96,35 @@ fun TimerScreen(
         animationSpec = tween(durationMillis = 100, easing = FastOutLinearInEasing),
         label = "blinkAnimation"
     )
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .background(Color.White.copy(alpha = alpha))
-            .padding(12.dp)
-    ) {
-        if (windowSizeClass.isWidthAtLeastBreakpoint(600)) {
-            WideScreen(state, { viewModel.start() }, { viewModel.stop() })
-        } else {
-            NarrowScreen(state, { viewModel.start() }, { viewModel.stop() })
+
+    if (isBound) {
+        val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(Color.White.copy(alpha = alpha))
+                .padding(12.dp)
+        ) {
+            if (windowSizeClass.isWidthAtLeastBreakpoint(600)) {
+                WideScreen(state, { viewModel.start() }, { viewModel.stop() })
+            } else {
+                NarrowScreen(state, { viewModel.start() }, { viewModel.stop() })
+            }
+        }
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .padding(12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.width(128.dp),
+                color = Color.White,
+                trackColor = Color.Gray,
+            )
         }
     }
 

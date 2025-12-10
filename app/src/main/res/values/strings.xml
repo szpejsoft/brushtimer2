@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">brushtimer2</string>
+    <string name="app_name">Brush Timer</string>
     <string name="bottom_tab_timer_title">Timer</string>
     <string name="bottom_tab_settings_title">Settings</string>
     <string name="settings_screen_blink_toggle_title">Blink enabled</string>
@@ -7,4 +7,7 @@
     <string name="settings_screen_adaptive_colors_toggle_title">Adaptive color scheme enabled</string>
     <string name="settings_screen_brush_period_title">Brushing time</string>
     <string name="settings_screen_save_button">Save</string>
+    <string name="time_left">Time left: %s</string>
+    <string name="stop">STOP</string>
+    <string name="notification_channel_name">Brushtimer notifications</string>
 </resources>
