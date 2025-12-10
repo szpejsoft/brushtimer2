@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.szpejsoft.brushtimer2.ui.common.secToMinSec
@@ -92,6 +93,7 @@ fun WideScreen(
     ) {
         Spacer(Modifier.weight(1.0f))
         Text(
+            modifier = Modifier.testTag(TimerTestTags.TIMER_TEXT),
             text = secToMinSec(uiState.timeLeftSec),
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -121,6 +123,7 @@ fun NarrowScreen(
     ) {
         Spacer(Modifier.weight(1.0f))
         Text(
+            modifier = Modifier.testTag(TimerTestTags.TIMER_TEXT),
             text = secToMinSec(uiState.timeLeftSec),
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -146,6 +149,7 @@ private fun HorizontalButtons(
         Button(
             modifier = Modifier
                 .weight(1.0f)
+                .testTag(TimerTestTags.START_BUTTON)
                 .height(64.dp),
             shape = LeftButtonShape,
             colors = ButtonDefaults.buttonColors(
@@ -164,6 +168,7 @@ private fun HorizontalButtons(
         Button(
             modifier = Modifier
                 .weight(1.0f)
+                .testTag(TimerTestTags.STOP_BUTTON)
                 .height(64.dp),
             shape = RightButtonShape,
             colors = ButtonDefaults.buttonColors(
@@ -197,6 +202,7 @@ fun VerticalButtons(
         Button(
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag(TimerTestTags.START_BUTTON)
                 .weight(1.0f),
             shape = TopButtonShape,
             colors = ButtonDefaults.buttonColors(
@@ -215,6 +221,7 @@ fun VerticalButtons(
         Button(
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag(TimerTestTags.STOP_BUTTON)
                 .weight(1.0f),
             shape = BottomButtonShape,
             colors = ButtonDefaults.buttonColors(
@@ -232,3 +239,8 @@ fun VerticalButtons(
     }
 }
 
+object TimerTestTags {
+    const val TIMER_TEXT = "TimerText"
+    const val START_BUTTON = "StartButton"
+    const val STOP_BUTTON = "StopButton"
+}
