@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -59,8 +61,7 @@ fun TimerScreen(
 
     DisposableEffect(Unit) {
         val serviceIntent = Intent(context, TimerService::class.java)
-        context.startService(serviceIntent) // Start the service to keep it alive
-
+        context.startService(serviceIntent)
         val connection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                 val binder = service as TimerService.LocalBinder
@@ -79,7 +80,6 @@ fun TimerScreen(
             context.unbindService(connection)
         }
     }
-
 
     if (playSound) {
         val context = LocalContext.current
@@ -113,7 +113,19 @@ fun TimerScreen(
             }
         }
     } else {
-        Text(text = "Service not bound")
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .padding(12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.width(128.dp),
+                color = Color.White,
+                trackColor = Color.Gray,
+            )
+        }
     }
 
 }

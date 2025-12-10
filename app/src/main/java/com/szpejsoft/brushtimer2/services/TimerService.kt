@@ -11,11 +11,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.szpejsoft.brushtimer2.R
+import com.szpejsoft.brushtimer2.common.Constants
 import com.szpejsoft.brushtimer2.common.settings.TimerSettings
 import com.szpejsoft.brushtimer2.ui.MainActivity
 import com.szpejsoft.brushtimer2.ui.common.secToMinSec
@@ -37,14 +37,19 @@ class TimerService : Service() {
         fun getService(): TimerService = this@TimerService
     }
 
-    val timeLeftMillis: StateFlow<Long> get() = _timeLeft
+    data class TimerState(
+        val timeLeftMillis: Long,
+        val quarterPassed: Boolean,
+        val isRunning: Boolean
+    )
+
+    val timerStateFlow: StateFlow<TimerState> get() = _timerStateFlow
 
     @Inject
     lateinit var settings: TimerSettings
 
     private val stopActionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d("ptsz", "stopActionReceiver onReceive: ")
             if (intent.action == ACTION_STOP) {
                 stopTimer()
             }
@@ -53,12 +58,24 @@ class TimerService : Service() {
 
     private val binder = LocalBinder()
     private val serviceScope = CoroutineScope(Dispatchers.Main)
-    private val _timeLeft = MutableStateFlow(0L)
 
     private var timerJob: Job? = null
-    private var timerDurationMillis: Long = 0L
+    private var timerDurationMillis: Long = Constants.DEFAULT_BRUSH_TIMER_PERIOD * 1000
+        set(value) {
+            field = value
+            quarterTimes = LongArray(3) { i -> (i + 1) * value / 4 }
+            timerJob?.cancel()
+            _timerStateFlow.value = TimerState(timeLeftMillis = value, quarterPassed = false, isRunning = false)
+        }
+    private val _timerStateFlow = MutableStateFlow(
+        TimerState(
+            timeLeftMillis = timerDurationMillis,
+            quarterPassed = false,
+            isRunning = false
+        )
+    )
+    private var quarterTimes: LongArray = longArrayOf(0)
     private lateinit var notificationManager: NotificationManager
-
 
     init {
         serviceScope.launch {
@@ -72,14 +89,8 @@ class TimerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        createNotificationChannel()
-        ContextCompat.registerReceiver(
-            this,
-            stopActionReceiver,
-            IntentFilter(ACTION_STOP),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        setupNotification()
+        registerStopButtonReceiver()
     }
 
     override fun onDestroy() {
@@ -91,31 +102,43 @@ class TimerService : Service() {
     fun startTimer() {
         val startTime = System.currentTimeMillis()
         var elapsedTimeMillis = 0L
-        _timeLeft.value = timerDurationMillis
+        _timerStateFlow.value = TimerState(
+            timeLeftMillis = timerDurationMillis,
+            quarterPassed = false,
+            isRunning = false
+        )
         timerJob?.cancel()
         timerJob = serviceScope.launch {
-            startForeground(NOTIFICATION_ID, createNotification(secToMinSec(_timeLeft.value)))
+            startForeground(
+                NOTIFICATION_ID,
+                createNotification(secToMinSec(_timerStateFlow.value.timeLeftMillis))
+            )
             while (elapsedTimeMillis < timerDurationMillis) {
                 delay(TIME_STEP_MILLIS)
                 elapsedTimeMillis = System.currentTimeMillis() - startTime
                 val timeLeftMillis = timerDurationMillis - elapsedTimeMillis
-                _timeLeft.value = timeLeftMillis
+                val previousTimeLeftMillis = _timerStateFlow.value.timeLeftMillis
+                val quarterPassed = quarterTimePassed(previousTimeLeftMillis, timeLeftMillis)
+                _timerStateFlow.value = TimerState(timeLeftMillis, quarterPassed, true)
                 val notification = createNotification(secToMinSec(timeLeftMillis / 1000))
                 notificationManager.notify(NOTIFICATION_ID, notification)
             }
-            //todo notify user that timer is finished
             delay(TIME_STEP_MILLIS)
-            _timeLeft.value = timerDurationMillis
+            _timerStateFlow.value = TimerState(
+                timeLeftMillis = timerDurationMillis,
+                quarterPassed = false,
+                isRunning = false
+            )
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
     }
 
     fun stopTimer() {
         timerJob?.cancel()
-        _timeLeft.value = timerDurationMillis
-        notificationManager.notify(
-            NOTIFICATION_ID,
-            createNotification(secToMinSec(_timeLeft.value / 1000))
+        _timerStateFlow.value = TimerState(
+            timeLeftMillis = timerDurationMillis,
+            quarterPassed = false,
+            isRunning = false
         )
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -143,10 +166,20 @@ class TimerService : Service() {
         PendingIntent.FLAG_IMMUTABLE
     )
 
-    private fun createNotificationChannel() {
+    private fun registerStopButtonReceiver() {
+        ContextCompat.registerReceiver(
+            this,
+            stopActionReceiver,
+            IntentFilter(ACTION_STOP),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+    }
+
+    private fun setupNotification() {
+        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
-            "Timer",
+            getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_LOW
         )
         notificationManager.createNotificationChannel(channel)
@@ -154,17 +187,18 @@ class TimerService : Service() {
 
     private fun getStopActionPendingIntent(): PendingIntent {
         val stopIntent = Intent(ACTION_STOP).setPackage(packageName)
-        return PendingIntent.getBroadcast(
-            this, ACTION_STOP_REQUEST_CODE, stopIntent, PendingIntent.FLAG_IMMUTABLE
-        )
+        return PendingIntent.getBroadcast(this, ACTION_STOP_REQUEST_CODE, stopIntent, PendingIntent.FLAG_IMMUTABLE)
     }
+
+    private fun quarterTimePassed(previousTimeLeft: Long, timeLeft: Long): Boolean =
+        quarterTimes.any { quarterTime -> quarterTime in timeLeft..<previousTimeLeft }
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "timer_channel"
         const val NOTIFICATION_ID = 1
         const val ACTION_STOP = "com.szpejsoft.brushtimer2.STOP_TIMER"
         const val ACTION_STOP_REQUEST_CODE = 42
-        private const val TIME_STEP_MILLIS = 100L
+        private const val TIME_STEP_MILLIS = 48L
     }
 
 }

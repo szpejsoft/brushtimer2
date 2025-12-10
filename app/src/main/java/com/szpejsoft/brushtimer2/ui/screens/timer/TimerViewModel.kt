@@ -1,5 +1,6 @@
 package com.szpejsoft.brushtimer2.ui.screens.timer
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.szpejsoft.brushtimer2.common.Constants
@@ -10,7 +11,6 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -34,16 +34,14 @@ constructor(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle(Constants.DEFAULT_BRUSH_TIMER_PERIOD, false))
 
+    @SuppressLint("StaticFieldLeak")
+    /*
+    * field nulled in onCleared() method 
+    */
     private var timerService: TimerService? = null
+
     private var soundEnabled = false
     private var blinkEnabled = false
-    private var timerDurationSec = Constants.DEFAULT_BRUSH_TIMER_PERIOD
-        set(value) {
-            field = value
-            blinkMillis = LongArray(3) { i -> (i + 1) * value * 1000 / 4 }
-            stop()
-        }
-    private var blinkMillis: LongArray = longArrayOf(0)
 
     init {
         with(viewModelScope) {
@@ -55,30 +53,29 @@ constructor(
                 timerSettings.blinkEnabled
                     .collect { blinkEnabled = it }
             }
-            launch {
-                timerSettings.timerDuration
-                    .collect { timerDurationSec = it }
-            }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerService = null
     }
 
     fun onServiceBound(service: TimerService) {
         timerService = service
         viewModelScope.launch {
-            val timerDurationMillis = timerDurationSec * 1000
             timerService?.let { service ->
-                service.timeLeftMillis
-                    .scan(initial = timerDurationMillis to timerDurationMillis) { acc, value -> acc.second to value }
-                    .collect { (previousTimeLeftMillis, timeLeftMillis) ->
-                        if (previousTimeLeftMillis < timerDurationMillis && timeLeftMillis == timerDurationMillis) {
-                            //after timer stops
-                            _uiState.value = UiState.Idle(timerDurationSec, soundEnabled)
-                        } else if (previousTimeLeftMillis == timerDurationMillis && timeLeftMillis == 0L) { //first state before timer start
-                            _uiState.value = UiState.Idle(timerDurationSec, false)
+                service.timerStateFlow
+                    .collect { state ->
+                        _uiState.value = if (state.isRunning) {
+                            UiState.Running(
+                                timeLeftSec = state.timeLeftMillis / 1000,
+                                blink = state.quarterPassed && blinkEnabled
+                            )
                         } else {
-                            _uiState.value = UiState.Running(
-                                timeLeftMillis / 1000,
-                                shouldBlink(previousTimeLeftMillis, timeLeftMillis) && blinkEnabled
+                            UiState.Idle(
+                                timeLeftSec = state.timeLeftMillis / 1000,
+                                playSound = state.quarterPassed && soundEnabled
                             )
                         }
                     }
@@ -93,8 +90,4 @@ constructor(
     fun stop() {
         timerService?.stopTimer()
     }
-
-    private fun shouldBlink(previousTimeLeft: Long, timeLeft: Long): Boolean =
-        blinkMillis.any { blinkTime -> blinkTime in previousTimeLeft..<timeLeft }
-
 }
